@@ -31,10 +31,15 @@ function toggle(value) {
           v-for="[value, label] in chooserState.options"
           :key="value"
           class="chooser-item"
-          :class="chooserState.multi ? { sel: isPicked(value) } : { sel: value === chooserState.current }"
+          :class="[chooserState.multi ? { sel: isPicked(value), multi: true } : { sel: value === chooserState.current }]"
+          :role="chooserState.multi ? 'checkbox' : undefined"
+          :aria-checked="chooserState.multi ? isPicked(value) : undefined"
           @click="chooserState.multi ? toggle(value) : resolveChooser(value)"
         >
-          <span v-if="chooserState.multi" class="ch-tick">{{ isPicked(value) ? '✓' : '' }}</span>{{ label }}
+          <span class="ch-label">{{ label }}</span>
+          <!-- Multi mode: an always-visible box, so it reads as a list to TICK
+               rather than a list to pick one from. -->
+          <span v-if="chooserState.multi" class="ch-box" aria-hidden="true">{{ isPicked(value) ? '✓' : '' }}</span>
         </button>
       </div>
       <div class="modal-actions">

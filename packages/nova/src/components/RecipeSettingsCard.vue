@@ -25,10 +25,11 @@ import RecipeDyeModal from './RecipeDyeModal.vue';
 
 const emit = defineEmits(['open-roast', 'pick-bean', 'pick-grinder', 'pick-profile']);
 /**
- * The graph layout (RecipeBrowser.vue) places the two halves apart:
- *  - `values`: dose, grind, target yield, temp — above the plot — with the
- *    bag / roast date under dose + grind and stop at weight under the yield;
- *  - `actions`: Edit Recipe (left) and a `right` slot — the page's bottom row.
+ * The graph layout (RecipeBrowser.vue) places the two halves side by side in
+ * the page's bottom row:
+ *  - `actions`: the Edit Recipe button, under the recipe list;
+ *  - `values`: dose, grind, target yield, temp — with the bag / roast date
+ *    under dose + grind and stop at weight under the yield — under the plot.
  */
 defineProps({ part: { type: String, default: 'values' } });
 const { t } = useI18n();
@@ -158,9 +159,6 @@ const ICONS = {
         <path d="M8 10h8M8 14h5" />
       </svg>{{ t('recipeDye.button') }}
     </button>
-    <!-- The row's right end is the caller's (RecipeBrowser puts the shot
-         stepper here). -->
-    <div class="rq-extras-right"><slot name="right" /></div>
   </div>
 
   <!-- Rises from the bottom, not pushed in from the right: DYE is the page

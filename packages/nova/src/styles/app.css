@@ -1150,7 +1150,9 @@ button:focus-visible { outline: 2px solid #7fa8c9; outline-offset: 2px; }
 /* Two columns on top (the recipe list, the graph), and the selected recipe's
    settings across the whole width below them (.browse-settings). */
 .espresso-browse { flex: 1; min-height: 0; display: grid; grid-template-columns: 220px 1fr; grid-template-rows: minmax(0, 1fr) auto; gap: 14px 18px; }
-.browse-settings { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+/* The same two columns as above: Edit Recipe under the list, the values under
+   the plot, their bottoms level. */
+.browse-settings { grid-column: 1 / -1; display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 18px; align-items: end; }
 .browse-list { display: flex; flex-direction: column; min-height: 0; gap: 10px; }
 /* Zoom, not font-size: the cards are sized in rem, which a container's font
    size cannot reach, and zoom scales the whole card — type, padding, gaps,
@@ -1262,9 +1264,7 @@ button:focus-visible { outline: 2px solid #7fa8c9; outline-offset: 2px; }
    itself (it inherits .rq-num), just muted, since it IS a second reading of
    that value rather than a caption on it. */
 .rq-ratio { color: var(--muted); margin-left: 5px; }
-/* The page's bottom row (RecipeSettingsCard part="actions"): Edit Recipe left,
-   stop at weight centred, the bag / roast-date picker right. Three columns,
-   so the switch stays centred whatever the two buttons' widths. */
+/* The bottom row's left cell (RecipeSettingsCard part="actions"): Edit Recipe. */
 .rq-extras { flex: none; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 /* The line under the values (RecipeSettingsCard part="values"), on the same
    four columns: the bag button centred under dose + grind, the stop-at-weight
@@ -1274,10 +1274,23 @@ button:focus-visible { outline: 2px solid #7fa8c9; outline-offset: 2px; }
 /* The switch and its ⓘ as one unit, centred under the target yield. The ⓘ
    sits OUTSIDE the switch's <label>, so tapping it can't toggle the switch. */
 .rq-sub .rq-stop { grid-column: 3; justify-self: center; display: inline-flex; align-items: center; gap: 8px; }
-/* Graph layout: the values row's top edge on the RECIPES title's top edge. */
-.browse-graph-col .recipe-quick { padding-top: 0; }
+/* Graph layout: the values' bottom edge on the Edit Recipe button's. */
+.browse-settings .recipe-quick { padding-bottom: 0; }
+/* The four values spread to the block's edges instead of sitting in four equal
+   shares (which left half a share empty left of Dose and right of Temp). The
+   two lines must keep sharing columns — bag under dose + grind, switch under
+   the yield — so both wrappers dissolve into ONE grid (display: contents). */
+.browse-settings .recipe-quick { display: grid; grid-template-columns: repeat(4, auto); justify-content: space-between; row-gap: 6px; padding-left: 20px; padding-right: 12px; }
+.browse-settings .rq-values,
+.browse-settings .rq-sub { display: contents; }
+/* Edit Recipe's middle on the numbers' middle: the block's top padding, the
+   icon and its gap, then half a number line, minus half the 60px button. */
+.browse-settings { align-items: start; }
+.browse-settings .rq-extras { margin-top: calc(32px + var(--fs-lg) * 0.75 - 30px); justify-content: center; }
+/* The shot stepper, centred over the plot; the top margin (title + its gap)
+   puts it below the RECIPES title, level with the first recipe card. */
+.browse-nav-row { flex: none; display: flex; justify-content: center; margin-top: 28px; }
 .rq-extras .btn { height: 60px; /* = the shot stepper beside it (.date-nav.browse-nav) */ justify-content: center; white-space: nowrap; }
-.rq-extras-right { justify-self: end; display: flex; }
 .rq-toggle { display: inline-flex; align-items: center; gap: 10px; cursor: pointer; }
 
 

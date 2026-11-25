@@ -289,9 +289,31 @@ const stepperDetail = computed(() => {
          width rather than the full page, which is what leaves the list on
          the left free to run past it. -->
     <div class="browse-graph-col">
-      <!-- The selected recipe's dose / grind / target yield / temp, above the
-           plot (no page title: the recipe list says what this page is). -->
-      <RecipeSettingsCard part="values" />
+      <!-- The shot stepper above the plot, level with the first recipe card:
+           ‹ › step through this recipe's shots; tapping the label opens the
+           full-screen review at the one shown. A fixed-width pill (see
+           .date-nav.browse-nav .date), so it never jitters. -->
+      <div class="browse-nav-row">
+        <div class="date-nav browse-nav" :class="{ 'is-pressed': datePressed }">
+          <button :disabled="!canOlder" :aria-label="t('espresso.olderShot')" @click="olderShot">‹</button>
+          <!-- The ‹ › buttons step through shots in place; tapping the label
+               itself opens the full-screen review at whichever one is shown. -->
+          <button
+            class="date"
+            :disabled="!graphShots.length"
+            :aria-label="t('liveShot.historyTitle')"
+            @click="openHistoricalReview"
+            @pointerdown="datePressed = true"
+            @pointerup="datePressed = false"
+            @pointercancel="datePressed = false"
+            @pointerleave="datePressed = false"
+          >
+            {{ stepperLabel }}
+            <small v-if="stepperDetail" class="date-time">{{ stepperDetail }}</small>
+          </button>
+          <button :disabled="!canNewer" :aria-label="t('espresso.newerShot')" @click="newerShot">›</button>
+        </div>
+      </div>
 
       <div class="shot-graph">
         <ShotStripChart :series="graphSeries" mode="static" :show-targets="skinSettings.showTargets" :expert="expertGraph" axes @scrub="scrub = $event" />
@@ -311,8 +333,9 @@ const stepperDetail = computed(() => {
       </div>
 
     </div>
-    <!-- The bottom row across the whole page: Edit Recipe, stop at weight,
-         the bag picker. See RecipeSettingsCard.vue. -->
+    <!-- The bottom row: Edit Recipe under the list, the selected recipe's
+         values (with its bag and stop at weight) under the plot. See
+         RecipeSettingsCard.vue. -->
     <div class="browse-settings">
       <RecipeSettingsCard
         part="actions"
@@ -320,33 +343,8 @@ const stepperDetail = computed(() => {
         @pick-bean="emit('pick-bean')"
         @pick-grinder="emit('pick-grinder')"
         @pick-profile="emit('pick-profile')"
-      >
-        <!-- The shot stepper, at the bottom right: ‹ › step through this
-             recipe's shots on the plot above; tapping the label opens the
-             full-screen review at the one shown. A fixed-width pill (see
-             .date-nav.browse-nav .date), so the row never jitters. -->
-        <template #right>
-          <div class="date-nav browse-nav" :class="{ 'is-pressed': datePressed }">
-              <button :disabled="!canOlder" :aria-label="t('espresso.olderShot')" @click="olderShot">‹</button>
-              <!-- The ‹ › buttons step through shots in place; tapping the label
-                   itself opens the full-screen review at whichever one is shown. -->
-              <button
-                class="date"
-                :disabled="!graphShots.length"
-                :aria-label="t('liveShot.historyTitle')"
-                @click="openHistoricalReview"
-                @pointerdown="datePressed = true"
-                @pointerup="datePressed = false"
-                @pointercancel="datePressed = false"
-                @pointerleave="datePressed = false"
-              >
-                {{ stepperLabel }}
-                <small v-if="stepperDetail" class="date-time">{{ stepperDetail }}</small>
-              </button>
-              <button :disabled="!canNewer" :aria-label="t('espresso.newerShot')" @click="newerShot">›</button>
-            </div>
-        </template>
-      </RecipeSettingsCard>
+      />
+      <RecipeSettingsCard part="values" @open-roast="emit('open-roast')" />
     </div>
   </div>
 </template>

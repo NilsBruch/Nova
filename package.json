@@ -2,15 +2,14 @@
   "name": "espresso-skins",
   "version": "0.0.0",
   "private": true,
-  "description": "Monorepo for Decent DE1 skins sharing a headless core",
+  "description": "Nova, a skin for the Decent DE1, on a headless shared core",
   "workspaces": [
     "packages/*"
   ],
   "scripts": {
     "sync-core": "node scripts/sync-core.mjs",
     "test": "node --test \"packages/core/test/*.test.mjs\"",
-    "dev:nsx": "npm run sync-core && node tests/mock-gateway/server.mjs --static",
-    "dev:gateway": "npm run sync-core && node tests/mock-gateway/server.mjs",
+    "dev:gateway": "npm run build:nova && node tests/mock-gateway/server.mjs",
     "dev:nova": "npm run sync-core && npm run dev -w @espresso-skins/nova",
     "build:nova": "npm run sync-core && npm run build -w @espresso-skins/nova"
   },

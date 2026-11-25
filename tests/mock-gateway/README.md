@@ -3,18 +3,15 @@
 A dependency-light stand-in for the Streamline-Bridge gateway, so the skin can
 be developed and tested **without a DE1**.
 
-It serves `packages/nsx/src` as the web root — exactly what the Decent app does
-— and mocks the REST + WebSocket API on the same port.
+It builds Nova and serves `packages/nova/dist` as the web root — the artifact the
+Decent app actually gets — and mocks the REST + WebSocket API on the same port.
 
 ```bash
-npm run dev:gateway            # sync-core, then serve on http://localhost:8080
+npm run dev:gateway            # build Nova, then serve on http://localhost:8080
 PORT=8090 npm run dev:gateway  # if the real Decent app already owns 8080
 ```
 
-The same script also runs **without** the mock, for working against a real
-machine — that is `npm run dev:nsx` (`--static`): it serves the skin on port
-5174 and answers nothing under `/api/`, leaving the gateway to whoever owns
-port 8080.
+For the hot-reload loop use `npm run dev:nova` (Vite) instead.
 
 > **Port caveat.** `packages/core/src/config.js` derives the gateway host from
 > `location.hostname` but **hardcodes port 8080**. On the default port

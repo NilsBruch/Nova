@@ -1,7 +1,7 @@
 /**
  * Mock Streamline-Bridge gateway — local development & tests, no DE1 needed.
  *
- * Serves `packages/nsx/src` as the web root (exactly like the Decent app does)
+ * Serves the built skin (`packages/nova/dist`) as the web root (as the Decent app does)
  * and mocks the REST + WebSocket API on the same port, so the skin runs
  * unmodified against http://localhost:8080.
  *
@@ -12,7 +12,6 @@
  *   - GET /store/<ns>/<key> does NOT  ← the quirk behind issue #3
  *
  * Run: npm run dev:gateway   (runs sync-core first, then this)
- *      npm run dev:nsx       (same server, --static: skin only, no mock API)
  */
 import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
@@ -30,14 +29,14 @@ import * as fx from "./fixtures.mjs";
 const STATIC_ONLY = process.argv.includes("--static");
 const PORT = Number(process.env.PORT || (STATIC_ONLY ? 5174 : 8080));
 
-// Which skin to serve: `--skin=nova` (default: nsx). A CLI flag rather than an env
+// Which skin to serve: `--skin=<package>` (default: nova). A CLI flag rather than an env
 // var so it works the same in cmd/PowerShell/bash.
-const SKIN = (process.argv.find((a) => a.startsWith("--skin=")) || "--skin=nsx").split("=")[1];
+const SKIN = (process.argv.find((a) => a.startsWith("--skin=")) || "--skin=nova").split("=")[1];
 const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 
 // A built skin (Vite: Nova) is served from dist/ — that is the artifact the Decent
 // app actually gets, same-origin, so it is the truest local test. A no-build skin
-// (NSX) is served straight from src/. Nova's HMR loop instead runs the Vite dev
+// would be served straight from src/. Nova's HMR loop instead runs the Vite dev
 // server on its own port and calls this gateway cross-origin (see CORS below).
 const SKIN_DIR = join(REPO_ROOT, "packages", SKIN);
 const WEB_ROOT = [join(SKIN_DIR, "dist"), join(SKIN_DIR, "src")]
@@ -577,7 +576,7 @@ function routeApi(req, res, url, body) {
   return json({ message: `mock: unhandled ${method} ${path}` }, 404);
 }
 
-/* ── static file serving (packages/nsx/src as web root) ──── */
+/* ── static file serving ─────────────────────────────────── */
 
 async function serveStatic(url, res) {
   let rel = decodeURIComponent(url.pathname);
@@ -707,7 +706,7 @@ if (!STATIC_ONLY) {
 
 server.listen(PORT, () => {
   if (STATIC_ONLY) {
-    console.log(`NSX skin on http://localhost:${PORT}`);
+    console.log(`${SKIN} skin on http://localhost:${PORT}`);
     console.log(`  web root: ${WEB_ROOT}`);
     console.log(`  gateway:  http://localhost:8080 (whatever owns that port)`);
     return;

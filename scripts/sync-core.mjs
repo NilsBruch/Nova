@@ -2,7 +2,6 @@
 //
 // Both skins consume the core the same way — as plain browser scripts that assign
 // window.NSXCore / NSXApi / NSXConfig / NSXI18n:
-//   - nsx  (vanilla, no build): <script src="core/…"> from the served root.
 //   - nova (Vue + Vite):        side-effect `import`ed by src/main.js, bundled by Vite.
 // Either way the destination is <package>/src/core, which is git-ignored and
 // regenerated from packages/core/src — the single source of truth.

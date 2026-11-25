@@ -3,8 +3,8 @@ name: Build and Release Nova Skin
 on:
   push:
     tags:
-      # Nova has its own tag stream so it releases independently of NSX (which
-      # still uses plain v*). 'nova-v0.1.0' does not match NSX's 'v*' glob.
+      # Nova's tags keep the 'nova-v' prefix from when it shared a repository with
+      # NSX; the skin's own update check looks for exactly that prefix.
       - 'nova-v*'
 
 jobs:

@@ -6,9 +6,14 @@ mutable UI state. A second skin (e.g. a future Vue skin) consumes the exact same
 core.
 
 **Editing:** edit only here, then run **`npm run sync-core`** from the repo root
-(copies `packages/core/src` → `packages/nsx/src/core/`, a git-ignored generated
-copy that the Decent-served web root loads at `core/…`). Never edit
-`packages/nsx/src/core/` directly — it is overwritten.
+(copies `packages/core/src` → `packages/nova/src/core/`, a git-ignored generated
+copy that Nova's build bundles). Never edit `packages/nova/src/core/` directly —
+it is overwritten.
+
+The NSX skin this core was first extracted from lives in the (frozen)
+`NilsBruch/NSX` repository; mentions of NSX below describe that history. The
+default store namespace is still `"NSX"`, because that is real data on users'
+gateways — Nova claims `"Nova"` before booting.
 
 Everything attaches to a single global, **`window.NSXCore`**.
 

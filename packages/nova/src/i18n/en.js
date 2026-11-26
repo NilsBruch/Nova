@@ -318,6 +318,9 @@ export default {
     blockedByShot: 'Cannot start while a shot is running',
   },
   liveShot: {
+    // The shot view's ⋯ menu (LiveShotOverlay.vue).
+    moreActions: 'More actions',
+    deleteShot: 'Delete shot',
     title: 'Espresso',
     saving: 'Saving shot…',
     skipStep: 'Skip step',

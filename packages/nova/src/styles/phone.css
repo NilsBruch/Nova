@@ -545,21 +545,16 @@ body[data-phone="true"] .shot-metrics { grid-template-columns: repeat(3, 1fr); }
    line, left / centre / right. The tablet pins the two buttons to the
    corners over a centred star row (position: absolute), which on a phone's
    width put the stars underneath the DYE button. Here all three sit in the
-   flow instead, smaller: a shorter row, tighter buttons, smaller stars, and
-   Delete as its icon alone (it keeps its aria-label) — the word is what did
-   not fit. */
+   flow instead, smaller: a shorter row, tighter buttons, smaller stars. The
+   ⋯ menu button stays a square here — at Describe's width it would take the
+   stars' room. */
 body[data-phone="true"] .shot-done { height: 48px; justify-content: space-between; gap: 8px; }
-body[data-phone="true"] .shot-dye,
-body[data-phone="true"] .shot-delete { position: static; align-self: stretch; padding: 0 12px; letter-spacing: 0.04em; }
-body[data-phone="true"] .shot-delete { font-size: 0; gap: 0; }
-body[data-phone="true"] .shot-delete svg { width: 18px; height: 18px; }
+body[data-phone="true"] .shot-dye { position: static; align-self: stretch; padding: 0 12px; letter-spacing: 0.04em; }
 body[data-phone="true"] .rate-stars { gap: 2px; }
-/* Phone: the left pair is a plain flex item, and the recipe action shrinks to
-   its icon like Delete does, so the stars keep their room. */
+body[data-phone="true"] .shot-more-btn { width: auto; min-width: 48px; }
+/* Phone: Describe is a plain flex item. */
 body[data-phone="true"] .shot-done { display: flex; }
 body[data-phone="true"] .shot-done-left { display: flex; position: static; align-self: stretch; gap: 6px; }
-body[data-phone="true"] .shot-recipe .shot-recipe-label { display: none; }
-body[data-phone="true"] .shot-recipe svg { width: 18px; height: 18px; }
 body[data-phone="true"] .star { font-size: var(--fs-lg); }
 body[data-phone="true"] .glabel { flex-wrap: wrap; row-gap: 4px; }
 

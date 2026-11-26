@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, watch } from 'vue';
+import { computed, ref, watch, onBeforeUnmount } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { phase, savingShot, captureEnded, series, historyShots, historyIndex, currentFullShot, shotStartMs, skipStep, closeHistory, olderShot, newerShot, rateShot, setActualDose, setActualYield, grindSetting, setGrindSetting, deleteCurrentShot, virtualScaleActive, liveVirtualWeight, displayFrame } from '../composables/useLiveShot.js';
 import { recipe, recipes } from '../composables/useRecipe.js';
@@ -173,6 +173,30 @@ watch(historyIndex, () => { scrub.value = null; });
 // how you read the same field across several shots.
 const dyeOpen = ref(false);
 watch(phase, () => { dyeOpen.value = false; });
+
+// The ⋯ menu in the bottom row. Closes on any way out of this shot: stepping
+// to another one, opening DYE, leaving the history view.
+const moreOpen = ref(false);
+watch([historyIndex, dyeOpen, phase], () => { moreOpen.value = false; });
+// Close first, then act: the action's own confirm opens over a closed menu.
+function runMore(action) {
+  moreOpen.value = false;
+  action();
+}
+// ⋯ is exactly as wide as Describe opposite, for symmetry: measured, since
+// the label's width depends on the language and the text scale (--dye-w in
+// app.css). The button comes and goes with the shot (v-if), hence the watch.
+const dyeBtn = ref(null);
+const dyeWidth = ref(0);
+let dyeObs = null;
+watch(dyeBtn, (el) => {
+  dyeObs?.disconnect();
+  dyeObs = null;
+  if (!el) return;
+  dyeObs = new ResizeObserver(() => { dyeWidth.value = el.offsetWidth; });
+  dyeObs.observe(el);
+});
+onBeforeUnmount(() => dyeObs?.disconnect());
 const fmt = (v, dec = 1) => (Number.isFinite(v) ? v.toFixed(dec) : '—');
 
 async function confirmDeleteShot() {
@@ -361,34 +385,48 @@ async function editGrindSetting() {
           <div class="metric"><div class="ml">{{ t('liveShot.mRatio') }}</div><div class="mv">{{ ratioLabel }}</div></div>
           <div class="metric"><div class="ml">{{ t('liveShot.mTime') }}</div><div class="mv">{{ durationLabel }}<small>s</small></div></div>
         </div>
-        <div class="shot-done">
+        <div class="shot-done" :style="dyeWidth ? { '--dye-w': dyeWidth + 'px' } : null">
           <!-- Bottom left, opposite Delete: the way DOWN into the rest of this
                shot's record. Everything the graph page has no room for lives
                there (ShotDyePage.vue). -->
           <div class="shot-done-left">
-            <button class="shot-dye" @click="dyeOpen = true">
+            <button ref="dyeBtn" class="shot-dye" @click="dyeOpen = true">
               {{ t('dye.open') }}
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9l7 7 7-7" /></svg>
-            </button>
-            <!-- Save as recipe / Update recipe — see shotRecipe above. -->
-            <button
-              v-if="shotRecipe"
-              class="shot-dye shot-recipe"
-              :aria-label="t(shotRecipe.kind === 'save' ? 'shotRecipe.save' : 'shotRecipe.update')"
-              @click="onShotRecipe"
-            >
-              <svg v-if="shotRecipe.kind === 'save'" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
-              <svg v-else viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 5v6h-6" /></svg>
-              <span class="shot-recipe-label">{{ t(shotRecipe.kind === 'save' ? 'shotRecipe.save' : 'shotRecipe.update') }}</span>
             </button>
           </div>
           <div class="rate-stars">
             <button v-for="n in 5" :key="n" class="star" :class="{ on: n <= rating }" @click="setRating(n)">{{ n <= rating ? '★' : '☆' }}</button>
           </div>
-          <button class="shot-delete" :aria-label="t('common.delete')" @click="confirmDeleteShot">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13h10l1-13" /></svg>
-            {{ t('common.delete') }}
-          </button>
+          <!-- ⋯ — the actions on THIS shot that aren't used on every shot:
+               Save as / Update recipe (see shotRecipe above) and Delete. A
+               menu opening upward; Delete last, set apart and red, and it
+               still asks. New per-shot actions go in here too. -->
+          <div class="shot-more">
+            <button
+              class="shot-more-btn"
+              :class="{ open: moreOpen }"
+              :aria-label="t('liveShot.moreActions')"
+              aria-haspopup="menu"
+              :aria-expanded="moreOpen"
+              @click="moreOpen = !moreOpen"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.6" /><circle cx="12" cy="12" r="1.6" /><circle cx="19" cy="12" r="1.6" /></svg>
+            </button>
+            <div v-if="moreOpen" class="shot-more-scrim" @click="moreOpen = false"></div>
+            <div v-if="moreOpen" class="shot-more-menu" role="menu">
+              <button v-if="shotRecipe" role="menuitem" @click="runMore(onShotRecipe)">
+                <svg v-if="shotRecipe.kind === 'save'" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+                <svg v-else viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 5v6h-6" /></svg>
+                {{ t(shotRecipe.kind === 'save' ? 'shotRecipe.save' : 'shotRecipe.update') }}
+              </button>
+              <div v-if="shotRecipe" class="shot-more-sep" role="separator"></div>
+              <button role="menuitem" class="danger" @click="runMore(confirmDeleteShot)">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13h10l1-13" /></svg>
+                {{ t('liveShot.deleteShot') }}
+              </button>
+            </div>
+          </div>
         </div>
       </template>
       <div v-else class="list"><div class="list-row"><span class="rsub">{{ t('liveShot.noShotsYet') }}</span></div></div>

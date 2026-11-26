@@ -2430,29 +2430,43 @@ button:focus-visible { outline: 2px solid #7fa8c9; outline-offset: 2px; }
 }
 .shot-dye svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 .rate-stars { display: inline-flex; gap: 8px; }
-/* The shot view's action row — Describe · Save as / Update recipe · stars ·
-   Delete — with EQUAL GAPS between them: each keeps its natural width and the
-   free space is shared out evenly, so nothing is clipped and nothing can push
-   into its neighbour (the recipe button used to run into the centred stars).
-   .shot-done-left only groups the first two in the markup (the phone lays them
-   out as a pair); here it dissolves into the row. */
-.shot-done { justify-content: space-between; gap: 12px; align-items: stretch; }
+/* The shot view's action row — Describe · stars · ⋯ — on a 1fr / auto / 1fr
+   grid, so the stars sit at the exact centre however wide Describe is.
+   Describe and ⋯ fill the row top to bottom. .shot-done-left only groups
+   Describe in the markup (the phone lays it out on its own); here it
+   dissolves into the row. */
+.shot-done { display: grid; grid-template-columns: 1fr auto 1fr; gap: 12px; align-items: stretch; }
 .shot-done-left { display: contents; }
-.shot-done .shot-dye,
-.shot-done .shot-delete { position: static; flex: 0 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; padding: 0 16px; letter-spacing: 0.05em; }
-.shot-done .rate-stars { align-self: center; flex: none; gap: 6px; }
-/* Delete pinned to the right so the star rating stays visually centred. Type
-   as .ov-back's; the height is the row's (.shot-done, 68px — an action
-   button's), shared with the DYE button opposite. Only the colours and the
-   corner radius differ, because one is a way in and the other destructive. */
-.shot-delete {
-  position: absolute; right: 0; top: 0; bottom: 0;
-  display: inline-flex; align-items: center; gap: 8px;
-  background: var(--danger-wash); color: var(--alert); border: none; border-radius: var(--r-sm);
-  padding: 0 22px; font-family: inherit; font-size: var(--fs-sm); font-weight: 600;
-  letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer;
+.shot-done .shot-dye { position: static; justify-self: start; min-width: 0; white-space: nowrap; overflow: hidden; padding: 0 16px; letter-spacing: 0.05em; }
+.shot-done .rate-stars { align-self: center; gap: 6px; }
+/* ⋯: bottom right, exactly as wide as Describe opposite (--dye-w, measured in
+   LiveShotOverlay.vue, so a longer label keeps the pair in step) — a square
+   until that's known. Its menu opens UPWARD from it, right-aligned, over the
+   metrics. The scrim is transparent: it only catches the tap outside that
+   closes the menu. */
+.shot-more { position: relative; justify-self: end; display: flex; }
+.shot-more-btn {
+  height: 100%; min-width: 68px; width: var(--dye-w, auto); display: inline-flex; align-items: center; justify-content: center;
+  background: var(--card-bg); color: var(--text); border: none; border-radius: var(--r-md); cursor: pointer;
 }
-.shot-delete svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.shot-more-btn.open { background: var(--line); }
+.shot-more-btn svg { width: 22px; height: 22px; fill: currentColor; stroke: none; }
+.shot-more-scrim { position: fixed; inset: 0; z-index: 20; }
+.shot-more-menu {
+  position: absolute; right: 0; bottom: calc(100% + 8px); z-index: 21;
+  min-width: 240px; padding: 6px; display: flex; flex-direction: column;
+  background: var(--card-bg); border: 1px solid var(--line); border-radius: var(--r-md);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+}
+.shot-more-menu button {
+  display: flex; align-items: center; gap: 12px; height: 52px; padding: 0 14px;
+  background: none; border: none; border-radius: var(--r-sm); color: var(--text);
+  font-family: inherit; font-size: var(--fs-sm); font-weight: 600; text-align: left; white-space: nowrap; cursor: pointer;
+}
+.shot-more-menu button:active { background: var(--line); }
+.shot-more-menu button.danger { color: var(--alert); }
+.shot-more-menu button svg { width: 18px; height: 18px; flex: none; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.shot-more-sep { height: 1px; margin: 4px 8px; background: var(--line); }
 .star { font-size: var(--fs-xl); line-height: 1; color: var(--faint); background: none; border: none; padding: 0; }
 .star.on { color: var(--accent); }
 

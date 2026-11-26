@@ -1278,11 +1278,15 @@ button:focus-visible { outline: 2px solid #7fa8c9; outline-offset: 2px; }
 .rq-sub .rq-stop { grid-column: 3; justify-self: center; display: inline-flex; align-items: center; gap: 8px; }
 /* Graph layout: the values' bottom edge on the Edit Recipe button's. */
 .browse-settings .recipe-quick { padding-bottom: 0; }
-/* The four values spread to the block's edges instead of sitting in four equal
-   shares (which left half a share empty left of Dose and right of Temp). The
-   two lines must keep sharing columns — bag under dose + grind, switch under
-   the yield — so both wrappers dissolve into ONE grid (display: contents). */
-.browse-settings .recipe-quick { position: relative; display: grid; grid-template-columns: repeat(4, auto); justify-content: space-between; row-gap: 6px; padding-left: 20px; padding-right: 12px; }
+/* The four values share the width with EQUAL gaps, the outer two included
+   (space-evenly): spread to the block's edges they looked cramped against
+   them, and in four equal shares they left half a share empty at each side.
+   The two lines must keep sharing columns — bag under dose + grind, switch
+   under the yield — so both wrappers dissolve into ONE grid (display: contents).
+   row-gap: the same visible space below the values as above them, where the
+   plot's 14px padding, the page grid's 14px gap and this block's 10px top
+   padding add up to 38px; the bag chip sits ~4px into its taller row. */
+.browse-settings .recipe-quick { position: relative; display: grid; grid-template-columns: repeat(4, auto); justify-content: space-evenly; row-gap: 34px; padding-left: 16px; padding-right: 16px; }
 .browse-settings .rq-values,
 .browse-settings .rq-sub { display: contents; }
 /* The bag chip must not size those auto columns: its label changes several
@@ -1294,14 +1298,18 @@ button:focus-visible { outline: 2px solid #7fa8c9; outline-offset: 2px; }
   position: absolute; grid-row: 2;
   left: 50%; top: 50%; transform: translate(-50%, -50%);
 }
-/* Edit Recipe's middle on the numbers' middle: the block's top padding, the
-   icon and its gap, then half a number line, minus half the 60px button. */
+/* Edit Recipe's middle a little below the numbers' middle (the block's top
+   padding, the icon and its gap, then half a number line, minus half the
+   68px button, plus 10px) — closer to the middle of the whole value tile,
+   icon to label. */
 .browse-settings { align-items: start; }
-.browse-settings .rq-extras { margin-top: calc(32px + var(--fs-lg) * 0.75 - 30px); justify-content: center; }
+.browse-settings .rq-extras { margin-top: calc(32px + var(--fs-lg) * 0.75 - 34px + 10px); justify-content: center; }
 /* The shot stepper, centred over the plot; the top margin (title + its gap)
    puts it below the RECIPES title, level with the first recipe card. */
 .browse-nav-row { flex: none; display: flex; justify-content: center; margin-top: 28px; }
-.rq-extras .btn { height: 60px; /* = the shot stepper beside it (.date-nav.browse-nav) */ justify-content: center; white-space: nowrap; }
+/* The size of the cleaning page's action buttons (.prep-bottom: 68px tall),
+   and the full width of the recipe column it sits under. */
+.rq-extras .btn { height: 68px; flex: 1; justify-content: center; white-space: nowrap; }
 .rq-toggle { display: inline-flex; align-items: center; gap: 10px; cursor: pointer; }
 
 

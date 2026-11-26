@@ -1204,10 +1204,13 @@ button:focus-visible { outline: 2px solid #7fa8c9; outline-offset: 2px; }
 .rp-card.compact.current .rp-ident { color: var(--text); }
 .rp-card.compact .rp-ident-grinder { font-size: var(--fs-xs); margin-top: -1px; }
 /* The card's last line: its text (grinder, or profile with one grinder) on
-   the left, kit chips on the right. The text gives way first; the chips keep
-   their own sideways scroll (.rp-kit) when there are many. */
+   the left, kit chips on the right. The text is part of the recipe's
+   identity, so it does NOT shrink (up to 60% of the line — a very long name
+   still ellipsises there); the chips give way and keep their own sideways
+   scroll (.rp-kit). Shrinking both shared the squeeze by length, and a long
+   kit row cut "Niche" to "N…". */
 .rp-card.compact .rp-foot { display: flex; align-items: center; gap: 8px; min-width: 0; }
-.rp-card.compact .rp-foot .rp-ident { flex: 1 1 auto; margin-top: 0; }
+.rp-card.compact .rp-foot .rp-ident { flex: 0 0 auto; max-width: 60%; margin-top: 0; }
 .rp-card.compact .rp-foot .rp-kit { flex: 0 1 auto; min-width: 0; margin-left: auto; }
 /* Compact chips match the grinder line: same type size, no extra height. */
 .rp-list .rp-card.compact .rp-kit-chip { padding: 0 6px; font-weight: 600; line-height: 1.45; }
@@ -2051,10 +2054,11 @@ button:focus-visible { outline: 2px solid #7fa8c9; outline-offset: 2px; }
    min-height — the row only exists when there is kit, so there is nothing to
    hold open. Inherited from the free-text tags this slot used to hold.
 
-   ONE line, scrolled by hand when the kit outruns the card. It was briefly a
-   measured auto-slide; letting the reader move it is better on a page that is
-   a LIST of these — a card that drifts on its own draws the eye away from the
-   one you were reading, and several drifting at once is a fairground.
+   ONE line, scrolled by hand when the kit outruns the card. Only the ACTIVE
+   card in the graph layout's list also slides on its own (RecipeCard's
+   kitStep): on a page that is a LIST of these, every card drifting at once
+   draws the eye away from the one you were reading — which is why an earlier
+   all-cards auto-slide was removed.
 
    touch-action: pan-x so a vertical drag still scrolls the list behind it,
    and the scrollbar is hidden like every other scroller in this skin. A drag

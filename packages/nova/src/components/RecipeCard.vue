@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, ref, watch, onBeforeUnmount } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { grinders, singleGrinder, formatGrinderLabel, recipeRoasterName, recipeCoffeeName, recipeProfileTitle } from '../composables/useCore.js';
 import { recipeKitNames } from '../composables/useRecipeKit.js';
@@ -70,6 +70,53 @@ const ratio = (entry) => window.NSXCore.calcRatio(Number(entry.targetDoseWeight)
  */
 const kit = computed(() => recipeKitNames(props.entry));
 
+/**
+ * The ACTIVE compact card slides its kit row back and forth when the chips
+ * don't fit, so every one of them is seen in turn. Only that one card: a list
+ * where every card drifts pulls the eye off the one you're reading (why the
+ * slide was once removed, see .rp-kit). Driven through scrollLeft, not a
+ * transform, so a drag by hand still works; touching the row pauses it, and
+ * it resumes a few seconds after letting go. Off with reduced motion.
+ */
+const kitEl = ref(null);
+const KIT_SPEED = 25;    // px per second
+const KIT_HOLD = 1500;   // ms at each end
+const KIT_RESUME = 3000; // ms after the finger lifts
+let kitRaf = 0, kitPos = 0, kitDir = 1, kitLast = 0, kitHoldUntil = 0, kitUserUntil = 0;
+function kitStep(ts) {
+  kitRaf = requestAnimationFrame(kitStep);
+  const el = kitEl.value;
+  const dt = kitLast ? ts - kitLast : 0;
+  kitLast = ts;
+  if (!el) return;
+  // While (or just after) a finger moved it, follow it rather than fight it.
+  if (ts < kitUserUntil) { kitPos = el.scrollLeft; return; }
+  const max = el.scrollWidth - el.clientWidth;
+  if (max <= 0 || ts < kitHoldUntil) return;
+  // A float of our own: scrollLeft rounds, and at this speed one frame moves
+  // less than a pixel, which rounding would swallow.
+  kitPos += kitDir * KIT_SPEED * dt / 1000;
+  if (kitPos >= max) { kitPos = max; kitDir = -1; kitHoldUntil = ts + KIT_HOLD; }
+  else if (kitPos <= 0) { kitPos = 0; kitDir = 1; kitHoldUntil = ts + KIT_HOLD; }
+  el.scrollLeft = kitPos;
+}
+function stopKitSlide() {
+  cancelAnimationFrame(kitRaf);
+  kitRaf = 0;
+  if (kitEl.value) kitEl.value.scrollLeft = 0;
+}
+const slideKit = computed(() => props.compact && props.current && kit.value.length > 0);
+watch(slideKit, (on) => {
+  stopKitSlide();
+  if (!on || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+  kitPos = 0; kitDir = 1; kitLast = 0; kitUserUntil = 0;
+  kitHoldUntil = performance.now() + KIT_HOLD;
+  kitRaf = requestAnimationFrame(kitStep);
+}, { immediate: true });
+onBeforeUnmount(stopKitSlide);
+function kitTouched() { kitUserUntil = Infinity; }
+function kitReleased() { kitUserUntil = performance.now() + KIT_RESUME; }
+
 </script>
 
 <template>
@@ -108,7 +155,14 @@ const kit = computed(() => recipeKitNames(props.entry));
          (showGrinderLine), else the profile line. -->
     <div v-if="compact" class="rp-foot">
       <span class="rp-ident" :class="{ 'rp-ident-grinder': showGrinderLine }">{{ showGrinderLine ? grinderDisplay(entry) : recipeProfileTitle(entry) }}</span>
-      <div v-if="kit.length" class="rp-kit">
+      <div
+        v-if="kit.length"
+        ref="kitEl"
+        class="rp-kit"
+        @pointerdown="kitTouched"
+        @pointerup="kitReleased"
+        @pointercancel="kitReleased"
+      >
         <span v-for="name in kit" :key="name" class="rp-kit-chip">{{ name }}</span>
       </div>
     </div>

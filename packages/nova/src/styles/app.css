@@ -1160,12 +1160,11 @@ button:focus-visible { outline: 2px solid #7fa8c9; outline-offset: 2px; }
    own cards. */
 .browse-list .rp-list-scroll { zoom: 0.9; }
 .browse-list-title { flex: none; }
-/* The graph layout's list: at the top of its column, 3½ cards high (height
-   set from RecipeBrowser.vue's measureList), the settings under it. */
-/* May shrink below its 5½-card height when the column is shorter (a small
-   screen, many kit rows) — the fade then still marks the cut. */
-.browse-list .rp-list { flex: 0 1 auto; min-height: 0; }
-.browse-list .rp-list:not(.scrollable)::after { display: none; }
+/* The graph layout's list fills its column down to the bottom row; the fade
+   shows only while cards are hidden below (RecipeBrowser.vue's moreBelow). */
+.browse-list .rp-list { flex: 1 1 auto; min-height: 0; }
+.browse-list .rp-list::after { opacity: 0; transition: opacity 0.2s; }
+.browse-list .rp-list.more-below::after { opacity: 1; }
 /* The non-scrolling shell that carries the bottom fade — .rp-list-scroll
    (below) is the part that actually scrolls, exactly like NSX's own
    recipe-list-shell/recipe-list-scroll split, so the fade stays pinned to the

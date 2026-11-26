@@ -361,7 +361,22 @@ async function finishLive() {
   await bumpRecipeLastUsed(recipe.id);
 
   if (fullShot) notifyStopReason(fullShot);
+  await stampShotEquipment(fullShot);
   await applyPostShotVirtualScale(historyShots.value[0], fullShot);
+}
+
+/** Copies the just-pulled shot's equipment (what the recipe carried into the
+ *  workflow) into its annotations, the only place DYE2 reads it — see core's
+ *  equipmentStampForShot. Best effort: a failure here must not disturb the
+ *  rest of the post-shot flow; Nova itself reads the workflow copy anyway. */
+async function stampShotEquipment(fullShot) {
+  const extras = fullShot ? NSXCore.equipmentStampForShot(fullShot) : null;
+  if (!extras) return;
+  try {
+    await NSXCore.updateShot(fullShot.id, { annotations: { extras } });
+  } catch (err) {
+    console.warn('[Nova] could not copy equipment onto the shot', err?.message);
+  }
 }
 
 /** Polls the shot list until the shot just brewed shows up for this recipe, so

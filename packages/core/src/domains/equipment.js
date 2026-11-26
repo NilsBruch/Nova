@@ -291,17 +291,33 @@
   /**
    * The basket / equipment / RPM recorded on a SAVED shot.
    *
-   * These live in `annotations.extras`, NOT in the shot's workflow context —
-   * DYE2's edit-shot page reads and writes them there, and a value put in the
-   * workflow context instead is simply not seen by it. `rpm` additionally
-   * falls back to `workflow.grinderData.rpm`, a legacy shape DYE2 still reads
-   * and which appears in no REST schema.
+   * A shot carries them in two places. What the recipe set BEFORE the shot is
+   * in the shot's own copy of the workflow (`workflow.context.extras` —
+   * Decaid stores the whole live workflow on each shot). An edit made AFTER
+   * the shot is in `annotations.extras` (DYE2's edit-shot page and ours write
+   * there). The edit wins; the workflow copy is the fallback — DYE2's own
+   * shotBasketRpm rule (utils/recorded-shot.ts), and like it the basket id and
+   * name come as a pair from ONE source, never mixed. `rpm` falls back
+   * further to `workflow.grinderData.rpm`, a legacy shape DYE2 still reads.
+   *
+   * Equipment follows the same rule here, which DYE2 itself doesn't (it reads
+   * equipment from annotations only — see equipmentStampForShot, which copies
+   * it there after a shot). An equipment array present in the annotations,
+   * even an empty one, is an edit and wins.
+   *
+   * A basket or RPM cleared on the shot (sent as null) falls back to the
+   * workflow copy again, exactly as in DYE2.
    */
   function dyeShotExtras(shot) {
-    const extras = shot?.annotations?.extras || {};
-    const out = {};
-    for (const k of DYE_SCALAR_EXTRAS) out[k] = blank(extras[k]) ? null : extras[k];
-    const equip = equipmentArrays(extras);
+    const ax = shot?.annotations?.extras || {};
+    const cx = shot?.workflow?.context?.extras || {};
+    const basket = !blank(ax.basketId) || !blank(ax.basketName) ? ax : cx;
+    const out = {
+      basketId: blank(basket.basketId) ? null : basket.basketId,
+      basketName: blank(basket.basketName) ? null : basket.basketName,
+      rpm: !blank(ax.rpm) ? ax.rpm : !blank(cx.rpm) ? cx.rpm : null,
+    };
+    const equip = hasEquipment(ax) ? equipmentArrays(ax) : equipmentArrays(cx);
     out.equipmentIds = equip.ids;
     out.equipmentNames = equip.names;
     if (out.rpm == null) {
@@ -309,6 +325,30 @@
       if (!blank(legacy)) out.rpm = legacy;
     }
     return out;
+  }
+
+  /** True when `extras` records an equipment choice at all — an array (even
+   *  an empty one: a list cleared on purpose) or the legacy singular pair. */
+  function hasEquipment(extras) {
+    const ex = extras || {};
+    return Array.isArray(ex.equipmentIds) || !blank(ex.equipmentId) || !blank(ex.equipmentName);
+  }
+
+  /**
+   * The annotations.extras patch that copies a just-pulled shot's equipment
+   * from its workflow copy into its annotations — or null when there is
+   * nothing to copy (no equipment on the workflow) or the shot already has
+   * its own (an edit, which must not be overwritten).
+   *
+   * Why: DYE2 reads a shot's equipment ONLY from annotations.extras, so the
+   * recipe's equipment riding along in the workflow is invisible to it. The
+   * basket needs no copy — DYE2 falls back to the workflow for that.
+   */
+  function equipmentStampForShot(shot) {
+    if (hasEquipment(shot?.annotations?.extras)) return null;
+    const { ids, names } = equipmentArrays(shot?.workflow?.context?.extras);
+    if (!ids.length) return null;
+    return shotEquipmentPatch(ids.map((id, i) => ({ id, name: names[i] ?? null })));
   }
 
   /**
@@ -376,6 +416,7 @@
     dyeFieldsFromContext,
     dyeShotExtras,
     equipmentArrays,
+    equipmentStampForShot,
     shotEquipmentPatch,
     normalizeDye,
     dyeContextFields,

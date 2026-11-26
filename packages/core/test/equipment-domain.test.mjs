@@ -218,6 +218,46 @@ test("RPM falls back to the legacy workflow.grinderData.rpm DYE2 still reads", (
   assert.equal(NSXCore.dyeShotExtras(edited).rpm, 800);
 });
 
+test("with nothing edited on the shot, it reads what the recipe carried into its workflow", () => {
+  // Decaid stores the live workflow on each shot, so a recipe's basket and
+  // equipment are in the shot's workflow.context.extras — DYE2's fallback.
+  const shot = {
+    annotations: { actualYield: 34 },
+    workflow: { context: { extras: {
+      tags: null, basketId: 'bskt-1', basketName: 'IMS 58', rpm: null,
+      equipmentIds: ['eqp-1', 'eqp-2'], equipmentNames: ['Acaia Pearl', 'Distribution Tool'],
+      equipmentId: null, equipmentName: null,
+    } } },
+  };
+  assert.deepEqual(NSXCore.dyeShotExtras(shot), {
+    basketId: 'bskt-1', basketName: 'IMS 58', rpm: null,
+    equipmentIds: ['eqp-1', 'eqp-2'], equipmentNames: ['Acaia Pearl', 'Distribution Tool'],
+  });
+});
+
+test("the basket comes as a pair from one source, never mixed", () => {
+  const shot = {
+    annotations: { extras: { basketName: 'VST 18g' } },
+    workflow: { context: { extras: { basketId: 'bskt-1', basketName: 'IMS 58' } } },
+  };
+  const got = NSXCore.dyeShotExtras(shot);
+  assert.equal(got.basketName, 'VST 18g');
+  assert.equal(got.basketId, null);
+});
+
+test("an equipment list emptied on the shot stays empty", () => {
+  const shot = {
+    annotations: { extras: { equipmentIds: [], equipmentNames: [] } },
+    workflow: { context: { extras: { equipmentIds: ['eqp-1'], equipmentNames: ['Lunar'] } } },
+  };
+  assert.deepEqual(NSXCore.dyeShotExtras(shot).equipmentIds, []);
+});
+
+test("RPM set before the shot is read from the workflow copy", () => {
+  const shot = { workflow: { context: { extras: { rpm: 900 } }, grinderData: { rpm: 750 } } };
+  assert.equal(NSXCore.dyeShotExtras(shot).rpm, 900);
+});
+
 test("a shot with no extras at all reads as empty, not as a crash", () => {
   const empty = { basketId: null, basketName: null, rpm: null, equipmentIds: [], equipmentNames: [] };
   assert.deepEqual(NSXCore.dyeShotExtras({}), empty);
@@ -271,6 +311,37 @@ test("the shot patch writes the arrays and nulls the legacy pair", () => {
   assert.deepEqual(NSXCore.shotEquipmentPatch([]), {
     equipmentIds: [], equipmentNames: [], equipmentId: null, equipmentName: null,
   });
+});
+
+/* ── Copying a new shot's equipment where DYE2 reads it ──────────────────── */
+
+test("a new shot's equipment is copied from its workflow into annotations", () => {
+  const shot = {
+    annotations: { actualYield: 34 },
+    workflow: { context: { extras: {
+      equipmentIds: ['eqp-1', 'eqp-2'], equipmentNames: ['Acaia Pearl', 'Distribution Tool'],
+    } } },
+  };
+  assert.deepEqual(NSXCore.equipmentStampForShot(shot), {
+    equipmentIds: ['eqp-1', 'eqp-2'], equipmentNames: ['Acaia Pearl', 'Distribution Tool'],
+    equipmentId: null, equipmentName: null,
+  });
+});
+
+test("nothing is copied when the workflow carried no equipment", () => {
+  assert.equal(NSXCore.equipmentStampForShot({ workflow: { context: { extras: { equipmentIds: [] } } } }), null);
+  assert.equal(NSXCore.equipmentStampForShot({}), null);
+  assert.equal(NSXCore.equipmentStampForShot(null), null);
+});
+
+test("equipment already on the shot is never overwritten, even an emptied list", () => {
+  const wf = { context: { extras: { equipmentIds: ['eqp-1'], equipmentNames: ['Lunar'] } } };
+  assert.equal(NSXCore.equipmentStampForShot({
+    annotations: { extras: { equipmentIds: ['eqp-2'], equipmentNames: ['WDT'] } }, workflow: wf,
+  }), null);
+  assert.equal(NSXCore.equipmentStampForShot({
+    annotations: { extras: { equipmentIds: [], equipmentNames: [] } }, workflow: wf,
+  }), null);
 });
 
 test("a recipe pushes its equipment list into context.extras, or omits it when empty", () => {

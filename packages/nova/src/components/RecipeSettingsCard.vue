@@ -17,7 +17,7 @@
  */
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { recipe, roastAge } from '../composables/useRecipe.js';
+import { recipe, roastAge, bagResolving } from '../composables/useRecipe.js';
 import { formatMediumDate } from '../composables/useCore.js';
 import { useRecipeDials } from '../composables/useRecipeDials.js';
 import { dispTemp, tempUnitLabel } from '../composables/useUnits.js';
@@ -52,11 +52,16 @@ const ratio = computed(() => NSXCore.calcRatio(recipe.targetDoseWeight, recipe.t
 
 // The bag button's label: date AND age ("Roasted 01. Sep 2026 (2 months)"),
 // spelled rather than in the locale's digit order — same as RecipeBody's chip.
-const roastButtonLabel = computed(() =>
-  (recipe.roastDate
+// While a just-loaded recipe's bag is still being looked up, keep the last
+// label rather than flashing "Set roast date" (see bagResolving).
+let lastRoastLabel = '';
+const roastButtonLabel = computed(() => {
+  if (bagResolving.value && lastRoastLabel) return lastRoastLabel;
+  lastRoastLabel = recipe.roastDate
     ? `${t('espresso.roasted')} ${formatMediumDate(recipe.roastDate)} (${roastAge.value})`
-    : t('espresso.setRoastDate'))
-);
+    : t('espresso.setRoastDate');
+  return lastRoastLabel;
+});
 
 const ICONS = {
   thermo: '<path d="M10 4a2 2 0 0 1 4 0v9a4.5 4.5 0 1 1-4 0V4z"/><path d="M12 9v6"/>',

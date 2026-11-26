@@ -1280,9 +1280,18 @@ button:focus-visible { outline: 2px solid #7fa8c9; outline-offset: 2px; }
    shares (which left half a share empty left of Dose and right of Temp). The
    two lines must keep sharing columns — bag under dose + grind, switch under
    the yield — so both wrappers dissolve into ONE grid (display: contents). */
-.browse-settings .recipe-quick { display: grid; grid-template-columns: repeat(4, auto); justify-content: space-between; row-gap: 6px; padding-left: 20px; padding-right: 12px; }
+.browse-settings .recipe-quick { position: relative; display: grid; grid-template-columns: repeat(4, auto); justify-content: space-between; row-gap: 6px; padding-left: 20px; padding-right: 12px; }
 .browse-settings .rq-values,
 .browse-settings .rq-sub { display: contents; }
+/* The bag chip must not size those auto columns: its label changes several
+   times while a recipe loads ("Set roast date" until the bag resolves, then
+   the date), and each change re-spread all four values. Absolutely
+   positioned, it still sits in its grid area (dose + grind, row 2), centred,
+   but no longer counts toward the column widths. */
+.browse-settings .rq-sub .rq-bag {
+  position: absolute; grid-row: 2;
+  left: 50%; top: 50%; transform: translate(-50%, -50%);
+}
 /* Edit Recipe's middle on the numbers' middle: the block's top padding, the
    icon and its gap, then half a number line, minus half the 60px button. */
 .browse-settings { align-items: start; }

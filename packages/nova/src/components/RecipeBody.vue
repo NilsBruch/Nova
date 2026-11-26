@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { recipeIdentityParts, formatMediumDate } from '../composables/useCore.js';
-import { recipe, roastAge, hasProfile, RECIPE_RATING } from '../composables/useRecipe.js';
+import { recipe, roastAge, hasProfile, RECIPE_RATING, bagResolving } from '../composables/useRecipe.js';
 import { useLongPress } from '../composables/useLongPress.js';
 import { useRecipeKit, recipeBasketName, recipeEquipmentNames } from '../composables/useRecipeKit.js';
 import { loadHistoryForCurrentRecipe } from '../composables/useLiveShot.js';
@@ -97,11 +97,16 @@ const titleParts = computed(() => recipeIdentityParts(recipe));
  * The age in brackets because it is the derived half: the date is the fact,
  * how long ago is what you do with it.
  */
-const roastLabel = computed(() =>
-  (recipe.roastDate
+// While a just-loaded recipe's bag is still being looked up, keep the last
+// label rather than flashing "Set roast date" (see bagResolving).
+let lastRoastLabel = '';
+const roastLabel = computed(() => {
+  if (bagResolving.value && lastRoastLabel) return lastRoastLabel;
+  lastRoastLabel = recipe.roastDate
     ? `${t('espresso.roasted')} ${formatMediumDate(recipe.roastDate)} (${roastAge.value})`
-    : t('espresso.setRoastDate'))
-);
+    : t('espresso.setRoastDate');
+  return lastRoastLabel;
+});
 </script>
 
 <template>

@@ -450,6 +450,11 @@ async function syncFromWorkflow(wf) {
   // machine (another skin), and a stale id would then win over the new title in
   // buildGatewayPayload.
   const keptProfileId = display.profileTitle === recipe.profileTitle ? recipe.selectedProfileId : null;
+  // Same bag as the recipe already holds (typically the echo of our own push):
+  // its date and bean are already right, so keep them while adoptBatch
+  // re-reads them, instead of blanking the roast chip for a round-trip.
+  const batchId = wf?.context?.beanBatchId ?? null;
+  const sameBag = batchId != null && batchId === recipe.beanBatchId;
   Object.assign(recipe, {
     coffeeRoaster: display.coffeeRoaster,
     coffeeName: display.coffeeName,
@@ -470,9 +475,9 @@ async function syncFromWorkflow(wf) {
     // another skin or from DYE2 itself carries whatever IT set.
     dye: NSXCore.dyeFieldsFromContext(wf?.context),
     grinderId: wf?.context?.grinderId ?? null,
-    beanId: null,
-    beanBatchId: wf?.context?.beanBatchId ?? null,
-    roastDate: null,
+    beanId: sameBag ? recipe.beanId : null,
+    beanBatchId: batchId,
+    roastDate: sameBag ? recipe.roastDate : null,
   });
   await adoptBatch(recipe.beanBatchId);
 }
@@ -699,6 +704,15 @@ export async function applyEditedLibraryProfile(savedRecord) {
  */
 export const recipeParked = ref(false);
 
+/**
+ * True while selectRecipe() is still looking up the loaded recipe's bag.
+ * `recipe.roastDate` is deliberately null in that window (a leftover date
+ * would make ensureRecipeBatch resolve a bag by the WRONG coffee's date), so
+ * the roast chips use this to keep their previous label instead of flashing
+ * "Set roast date" until the lookup lands.
+ */
+export const bagResolving = ref(false);
+
 /** Loads an existing recipe entity from the library and pushes it — selecting
  *  a recipe is "load it onto the machine now", since starting the brew itself
  *  happens on the machine's own hardware. Does NOT touch lastUsed (matching
@@ -752,7 +766,12 @@ export async function selectRecipe(entry, { push = true, batch = null } = {}) {
     recipe.roastDate = batch.roastDate ?? null;
     recipe.beanId = batch.beanId ?? recipe.beanId;
   } else {
-    await adoptBrewBatch(recipe.beanBatchId);
+    bagResolving.value = true;
+    try {
+      await adoptBrewBatch(recipe.beanBatchId);
+    } finally {
+      bagResolving.value = false;
+    }
   }
   if (push) await pushRecipe(); // ensureRecipeBatch heals an older, batch-less recipe here
 }

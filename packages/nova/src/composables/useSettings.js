@@ -479,9 +479,10 @@ export const skinSettings = reactive({
   graphMode: 'normal',
   // true = the coffee page becomes a browser: recipe cards on the left, the
   // selected recipe's shot graph on the right, a shot stepper + Edit Recipe
-  // button at the bottom, instead of the single-recipe dial layout. OFF by
-  // default so the classic page is what everyone keeps seeing.
-  coffeeGraph: false,
+  // button at the bottom, instead of the single-recipe dial layout. ON by
+  // default: the list is Nova's standard coffee page; the dial layout is the
+  // alternative (Settings → Skin → Coffee page).
+  coffeeGraph: true,
   // 'C' | 'F' — the unit every temperature in the skin is SHOWN and ENTERED in.
   // The gateway is Celsius-only, so this never leaves the skin: core's units
   // domain converts at the edges (see useUnits.js).
@@ -534,7 +535,7 @@ export function loadSkinSettings() {
   skinSettings.shotReviewAutoCloseSec = s.nova_shot_review_autoclose != null ? Number(s.nova_shot_review_autoclose) : 5;
   skinSettings.showTargets = s.nova_show_targets === true; // default off
   skinSettings.graphMode = s.nova_graph_mode || 'normal';
-  skinSettings.coffeeGraph = s.nova_coffee_graph === true; // default off
+  skinSettings.coffeeGraph = s.nova_coffee_graph !== false; // default on
   skinSettings.tempUnit = s.nova_temp_unit === 'F' ? 'F' : 'C';
   skinSettings.uiScale = s.nova_ui_scale != null ? Number(s.nova_ui_scale) : 100;
 }
